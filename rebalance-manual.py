@@ -2,9 +2,21 @@
 
 import sys, pprint, rebalance
 
-fee, desiredport = rebalance.readconfig(sys.argv[1])
+def usage():
+   print "%s <config.ini> <profitloss.csv> ASXCODE ammount [ASXCODE amount ....]  .." % sys.argv[0]
+   sys.exit(1)
 
-starterport = rebalance.read_cmc_pnl_to_portfdict(sys.argv[2],desiredport)
+try:
+   fee, desiredport = rebalance.readconfig(sys.argv[1])
+   cmcpnlcsvfilename = sys.argv[2]
+   buysequence = zip(sys.argv[3:][::2],sys.argv[3:][1::2])
+except:
+   usage()
+
+print buysequence
+print  zip(buysequence)
+
+starterport = rebalance.read_cmc_pnl_to_portfdict(cmcpnlcsvfilename,desiredport)
 
 portfolios = [starterport]
 
@@ -15,7 +27,7 @@ print "starter rating", starterrating
 
 totalspend = 0
 fees = 0
-for buycode,buyamount in zip(sys.argv[3:][::2],sys.argv[3:][1::2]):
+for buycode,buyamount in buysequence:
    print  "buy ",buyamount," of ",buycode
    portfolios.append(rebalance.rebalance(float(buyamount),portfolios[-1],buycode))
    totalspend = totalspend + float(buyamount)

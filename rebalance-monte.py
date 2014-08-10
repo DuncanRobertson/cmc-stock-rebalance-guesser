@@ -2,12 +2,20 @@
 
 import csv, sys, pprint, random, rebalance
 
-fee, desiredport = rebalance.readconfig(sys.argv[1])
+def usage():
+   print "%s <config.ini> <profitloss.csv> cashtospenddollars iterationcount  .." % sys.argv[0]
+   sys.exit(1)
 
-starterport = rebalance.read_cmc_pnl_to_portfdict(sys.argv[2],desiredport)
+try:
+   fee, desiredport = rebalance.readconfig(sys.argv[1])
+   cmcpnlcsvfilename = sys.argv[2]
+   addedcash = float(sys.argv[3])
+   numtries = int(sys.argv[4])
+except:
+   usage()
 
-addedcash = float(sys.argv[3])
-numtries = int(sys.argv[4])
+starterport = rebalance.read_cmc_pnl_to_portfdict(cmcpnlcsvfilename,desiredport)
+
 
 portfolios = {}
 
