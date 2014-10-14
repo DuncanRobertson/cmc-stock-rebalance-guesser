@@ -30,7 +30,7 @@ for asxcode in starterport.keys():
    newrating = rebalance.isrebalancegood(newport)
    # print asxcode,newrating
    # if newrating > starterrating or asxcode == 'TOTALS:':
-   if asxcode == 'TOTALS:':
+   if asxcode == rebalance.TOTALS:
       # print "dont bother with", asxcode
       pass
    else:
@@ -38,7 +38,7 @@ for asxcode in starterport.keys():
 
 
 asxcodestochoose = starterport.keys()
-asxcodestochoose.remove('TOTALS:')
+asxcodestochoose.remove(rebalance.TOTALS)
 
 # now split into two random amounts and buy two random ones.
 for i in xrange(numtries):
