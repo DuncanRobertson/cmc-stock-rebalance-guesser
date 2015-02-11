@@ -13,8 +13,8 @@ try:
 except:
    usage()
 
-print buysequence
-print  zip(buysequence)
+# print buysequence
+# print  zip(buysequence)
 
 starterport = rebalance.read_cmc_pnl_to_portfdict(cmcpnlcsvfilename,desiredport)
 

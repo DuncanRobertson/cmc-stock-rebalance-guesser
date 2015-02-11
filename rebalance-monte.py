@@ -41,7 +41,10 @@ asxcodestochoose = starterport.keys()
 asxcodestochoose.remove(rebalance.TOTALS)
 
 # now split into two random amounts and buy two random ones.
+print ".. getting two purchase options.."
 for i in xrange(numtries):
+   if not i % 300:
+      rebalance.update_progress(float(i)/float(numtries))
    buyamounts = rebalance.constrained_sum_sample_pos(2,int(addedcash - (fee * 2)))
    buy1amount = buyamounts[0]
    buy2amount = buyamounts[1]
@@ -57,7 +60,11 @@ for i in xrange(numtries):
    portfolios[newrating] = (buy1amount, buy1code, buy2amount, buy2code)
 
 # now split into three random amounts and buy three random ones.
+print
+print ".. getting three purchase options.."
 for i in xrange(numtries):
+   if not i % 300:
+      rebalance.update_progress(float(i)/float(numtries))
    buyamounts = rebalance.constrained_sum_sample_pos(3,int(addedcash - (fee * 3)))
    buy1amount = buyamounts[0]
    buy2amount = buyamounts[1]
