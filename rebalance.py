@@ -88,7 +88,9 @@ def rebalance(amount,portpassed,codetobuy):
 # slightly less ugly display method than pprint.pprint
 def printport(portf):
    asxcodes = portf.keys()
+   asxcodes.remove(TOTALS)
    asxcodes.sort()
+   asxcodes.append(TOTALS)
    print "%8s%12s%12s%12s" % ('ASXcode','%wanted','$total','%current')
    for asxcode in asxcodes:
       print "%8s%12.2f%12.2f%12.2f" % ((asxcode,) + portf[asxcode])

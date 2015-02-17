@@ -16,7 +16,6 @@ except:
 
 starterport = rebalance.read_cmc_pnl_to_portfdict(cmcpnlcsvfilename,desiredport)
 
-
 portfolios = {}
 
 print "starter portfolio"
@@ -34,60 +33,43 @@ for asxcode in starterport.keys():
       # print "dont bother with", asxcode
       pass
    else:
-      portfolios[newrating] = (addedcash,asxcode)
+      portfolios[newrating] = [addedcash,asxcode]
 
 
 asxcodestochoose = starterport.keys()
 asxcodestochoose.remove(rebalance.TOTALS)
 
-# now split into two random amounts and buy two random ones.
-print ".. getting two purchase options.."
-for i in xrange(numtries):
-   if not i % 300:
-      rebalance.update_progress(float(i)/float(numtries))
-   buyamounts = rebalance.constrained_sum_sample_pos(2,int(addedcash - (fee * 2)))
-   buy1amount = buyamounts[0]
-   buy2amount = buyamounts[1]
-   buy1code = random.choice(asxcodestochoose)
-   buy2code = random.choice(asxcodestochoose)
-   intermedport = rebalance.rebalance(buy1amount,starterport,buy1code)
-   newport = rebalance.rebalance(buy2amount,intermedport,buy2code)
-   newrating = rebalance.isrebalancegood(newport)
-   # if newrating > starterrating:
-   #  # print "dont bother with", buy1amount, buy1code, buy2amount, buy2code
-   #   pass
-   # else:
-   portfolios[newrating] = (buy1amount, buy1code, buy2amount, buy2code)
+maxlen = 0
 
-# now split into three random amounts and buy three random ones.
-print
-print ".. getting three purchase options.."
-for i in xrange(numtries):
-   if not i % 300:
-      rebalance.update_progress(float(i)/float(numtries))
-   buyamounts = rebalance.constrained_sum_sample_pos(3,int(addedcash - (fee * 3)))
-   buy1amount = buyamounts[0]
-   buy2amount = buyamounts[1]
-   buy3amount = buyamounts[2]
-   buy1code = random.choice(asxcodestochoose)
-   buy2code = random.choice(asxcodestochoose)
-   buy3code = random.choice(asxcodestochoose)
-   intermedport1 = rebalance.rebalance(buy1amount,starterport,buy1code)
-   intermedport2 = rebalance.rebalance(buy2amount,intermedport1,buy2code)
-   newport = rebalance.rebalance(buy3amount,intermedport2,buy3code)
-   newrating = rebalance.isrebalancegood(newport)
-   #if newrating > starterrating:
-   #   # print "dont bother with", buy1amount, buy1code, buy2amount, buy2code
-   #   pass
-   #else:
-   portfolios[newrating] = (buy1amount, buy1code, buy2amount, buy2code,buy3amount,buy3code)
-
+for numpurchases in xrange(2,len(asxcodestochoose) + 1):
+   # now split into four random amounts and buy four random ones.
+   print
+   print ".. trying options for ",numpurchases," number of purchases..."
+   for i in xrange(numtries):
+      if not i % 300:
+	 rebalance.update_progress(float(i)/float(numtries))
+      buyamounts = rebalance.constrained_sum_sample_pos(numpurchases,int(addedcash - (fee * numpurchases)))
+      buycode = []
+      intermedport = []
+      buypattern = []
+      for purchase in xrange(numpurchases):
+	 buycode.append(random.choice(asxcodestochoose))
+	 if purchase == 0:
+	    intermedport.append(rebalance.rebalance(buyamounts[purchase],starterport,buycode[purchase]))
+	 else:
+	    intermedport.append(rebalance.rebalance(buyamounts[purchase],intermedport[purchase - 1],buycode[purchase]))
+	 buypattern.append(buyamounts[purchase])
+	 buypattern.append(buycode[purchase])
+      newport = intermedport[-1]
+      newrating = rebalance.isrebalancegood(newport)
+      portfolios[newrating] = buypattern
+         
 
 # now rate the results and just show the best of each buy count.
    
 sortratings = portfolios.keys()
 sortratings.sort()
-maxlen = 10
+maxlen = len(asxcodestochoose) * 2 + 1
 prevlen = maxlen
 for rating in sortratings:
    if maxlen >= len(portfolios[rating]):
@@ -95,13 +77,14 @@ for rating in sortratings:
       if maxlen != prevlen:
          # have found the best rated of the next number of fees.
          prevlen = maxlen
+         print
          print "buy the following combos"
          portresult = [starterport]
          for buyamount,buycode in zip(portfolios[rating][::2],portfolios[rating][1::2]):
             print buyamount,buycode
             portresult.append(rebalance.rebalance(buyamount,portresult[-1],buycode))
-            rebalance.printport(portresult[-1])
-         
+            # rebalance.printport(portresult[-1])
+         rebalance.printport(portresult[-1])
          print "rating: ",rebalance.isrebalancegood(portresult[-1])
          print "broker fees: % ", len(portfolios[rating])/2 * fee / addedcash * 100
             
