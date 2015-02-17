@@ -12,6 +12,9 @@ VERY LITTLE ERROR CHECKING IS DONE!
 First tries the entire amount as a single buy.
 Then does a number of iterations broken into two random buys.
 Then does a number of iterations broken into three random buys.
+This continues broken into multiple purchases up until the amount of stocks in the target portfolio.
+
+There is also a prototypical version that uses the Python multiprocessor module to run faster on multicore machines. 
 
 Takes as input the CSV file saved from the CMC Markets "Profit and Loss" statement, as a source of the current state of the portfolio.
 

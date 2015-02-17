@@ -46,7 +46,7 @@ for numpurchases in xrange(2,len(asxcodestochoose) + 1):
    print
    print ".. trying options for ",numpurchases," number of purchases..."
    for i in xrange(numtries):
-      if not i % 300:
+      if not i % 700:
 	 rebalance.update_progress(float(i)/float(numtries))
       buyamounts = rebalance.constrained_sum_sample_pos(numpurchases,int(addedcash - (fee * numpurchases)))
       buycode = []
