@@ -43,15 +43,13 @@ if __name__ == '__main__':
 
    maxlen = 0
 
-def calcpurchases(numpurchases,return_queue):
+def calcpurchases(statusbar,numtries,numpurchases,return_queue):
    buychoices = {}
 
-   print
-   print ".. trying options for ",numpurchases," number of purchases..."
-   # now running multiprocessor, only put out a status bar for the longest running
-   # job, which is the largest number of purchases. Otherwise messy.
+   # print ".. trying options for ",numpurchases," number of purchases...tries",numtries
+   # now running multiprocessor, only put out a status bar for the first job.
    for i in xrange(numtries):
-      if (not i % 700) and (numpurchases == len(asxcodestochoose)):
+      if (not i % 700) and statusbar:
       	 rebalance.update_progress(float(i)/float(numtries))
       buyamounts = rebalance.constrained_sum_sample_pos(numpurchases,int(addedcash - (fee * numpurchases)))
       buycode = []
@@ -73,6 +71,7 @@ def calcpurchases(numpurchases,return_queue):
    # this step a holdover from when the non-parallel code putting it all in one global dict.
    sortratings = buychoices.keys()
    sortratings.sort()
+   # print "ending worker with numtries",numtries,"numpurchases",numpurchases
 
    return_queue.put({ sortratings[0] : buychoices[sortratings[0]] })
 
@@ -83,17 +82,22 @@ if __name__ == '__main__':
 
    # fire off the threads, this could be better as the larger buy combos run longer, so
    # TODO is to break these down.
+   statusbar = True
    for numpurchases in xrange(2,len(asxcodestochoose) + 1):
-      a_proc = multiprocessing.Process(target=calcpurchases,args=(numpurchases,result_queue))
-      proc_list.append(a_proc)
-      a_proc.start()
+      workertries = numtries/numpurchases
+      # print "starting ",numpurchases,"workers with a total of ",numtries,"tries"
+      for i in xrange(numpurchases):
+         # print "   starting worker with numtries",workertries,"numpurchases",numpurchases
+         a_proc = multiprocessing.Process(target=calcpurchases,args=(statusbar,workertries,numpurchases,result_queue))
+         statusbar = False
+         proc_list.append(a_proc)
+         a_proc.start()
 
    # wait for workers to finish and gather the results.
    for p in proc_list:
       tempbuychoices = result_queue.get()
       buychoices.update(tempbuychoices)
       p.join()
-   # print "result queue empty", result_queue.empty()
 
    # now rate the results and just show the best of each buy count.
       
