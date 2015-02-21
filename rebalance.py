@@ -97,6 +97,10 @@ def printport(portf):
 
 # from http://stackoverflow.com/questions/3002085/python-to-print-out-status-bar-and-percentage
 def update_progress(progress):
+    # bail if not going to a screen...
+    if sys.stdout.isatty() == False:
+        return
+
     barLength = 20 # Modify this to change the length of the progress bar
     status = ""
     if isinstance(progress, int):
