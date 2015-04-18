@@ -48,12 +48,6 @@ def constrained_sum_sample_pos(n, total):
     dividers = sorted(random.sample(xrange(1, total), n - 1))
     return [a - b for a, b in zip(dividers + [total], [0] + dividers)]
 
-def constrained_sum_sample_pos_float_multiple(n, total,price):
-    """Return a randomly chosen list of n positive integers summing to total.
-    Each such list is equally likely to occur."""
-
-    dividers = sorted(random.sample(xrange(1, total), n - 1))
-    return [a - b for a, b in zip(dividers + [total], [0] + dividers)]
 
 # function that determines the "goodness" of a rebalance.. currently just the
 # average of the percentage differences between desired % balance and current balance.
