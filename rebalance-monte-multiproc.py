@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import csv, sys, pprint, random, rebalance
+import csv, sys, pprint, random, rebalance, copy
 
 import multiprocessing
 
@@ -25,6 +25,7 @@ if __name__ == '__main__':
    rebalance.printport(starterport)
    starterrating = rebalance.isrebalancegood(starterport)
    print "starter rating", starterrating
+   print
 
    # first gather all the single buy choices.
    for asxcode in starterport.keys():
@@ -38,8 +39,15 @@ if __name__ == '__main__':
       else:
 	 buychoices[newrating] = [addedcash,asxcode]
 
+   # get list of ASXcodes in order of share price, highest to lowest, with TOTALS removed.
    asxcodestochoose = starterport.keys()
    asxcodestochoose.remove(rebalance.TOTALS)
+   asxcodestochoosesorted = []
+   for asxcode in asxcodestochoose:
+      asxcodestochoosesorted.append([starterport[asxcode][3],asxcode])
+
+   asxcodestochoosesorted.sort(reverse=True)
+
 
    maxlen = 0
 
@@ -55,8 +63,28 @@ def calcpurchases(statusbar,numtries,numpurchases,return_queue):
       buycode = []
       intermedport = []
       buypattern = []
+      asxcodestobuy = copy.copy(asxcodestochoosesorted)
+      # we have the sorted list of ASX codes, so randomly remove some from the list until we
+      # only have numpurchases left
+      while len(asxcodestobuy) > numpurchases:
+          asxcodestobuy.remove(random.choice(asxcodestobuy))
+
+      # print "for numpurchases",numpurchases,"have  asxcodestobuy", asxcodestobuy
+          
+      codestobuy = asxcodestochoosesorted
       for purchase in xrange(numpurchases):
-	 buycode.append(random.choice(asxcodestochoose))
+         # since the intervals chosen are random anyway, we dont need to randomly choose an ASX code?
+         # get the 
+	 buycode.append(asxcodestobuy[purchase][1])
+         # print "for this round getting ",asxcodestobuy[purchase][1]
+         # lets grab the asx code in order of lowest to highest share price, deleting 
+         # lets round the amount down to a multiple of share price, and add the remainder to the next purchase..
+         remainder = buyamounts[purchase] % starterport[buycode[purchase]][3]
+         # print remainder,purchase,numpurchases,buyamounts
+         if purchase < numpurchases -1:
+            buyamounts[purchase] = buyamounts[purchase] - remainder
+            buyamounts[purchase + 1] = buyamounts[purchase + 1] + remainder
+         
 	 if purchase == 0:
 	    intermedport.append(rebalance.rebalance(buyamounts[purchase],starterport,buycode[purchase]))
 	 else:
@@ -115,10 +143,11 @@ if __name__ == '__main__':
 	    print "buy the following combos"
 	    portresult = [starterport]
 	    for buyamount,buycode in zip(buychoices[rating][::2],buychoices[rating][1::2]):
-	       print buyamount,buycode
+	       print "%4s qty: %12.2f $amount: %12.2f" % (buycode,buyamount,buyamount/portresult[-1][buycode][3])
 	       portresult.append(rebalance.rebalance(buyamount,portresult[-1],buycode))
-	       # rebalance.printport(portresult[-1])
+            print 
 	    rebalance.printport(portresult[-1])
 	    print "rating: ",rebalance.isrebalancegood(portresult[-1])
 	    print "broker fees: % ", len(buychoices[rating])/2 * fee / addedcash * 100
             
+
