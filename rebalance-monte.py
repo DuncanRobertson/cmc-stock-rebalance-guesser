@@ -78,16 +78,17 @@ def calcpurchases(statusbar,numtries,numpurchases,return_queue):
       codestobuy = asxcodestochoosesorted
       for purchase in xrange(numpurchases):
          # since the intervals chosen are random anyway, we dont need to randomly choose an ASX code?
-         # get the 
+         # so we can do it in order of largest to smallest shareprice
 	 buycode.append(asxcodestobuy[purchase][1])
-         # print "for this round getting ",asxcodestobuy[purchase][1]
          # lets grab the asx code in order of lowest to highest share price, deleting 
          # lets round the amount down to a multiple of share price, and add the remainder to the next purchase..
-         remainder = buyamounts[purchase] % starterport[buycode[purchase]][3]
-         # print remainder,purchase,numpurchases,buyamounts
-         if purchase < numpurchases -1:
-            buyamounts[purchase] = buyamounts[purchase] - remainder
-            buyamounts[purchase + 1] = buyamounts[purchase + 1] + remainder
+         # proivided we got a share price (which we may have not if it is not a share already in the portfolio)
+         if starterport[buycode[purchase]][3] > 0.0:
+            remainder = buyamounts[purchase] % starterport[buycode[purchase]][3]
+            # print remainder,purchase,numpurchases,buyamounts
+            if purchase < numpurchases -1:
+               buyamounts[purchase] = buyamounts[purchase] - remainder
+               buyamounts[purchase + 1] = buyamounts[purchase + 1] + remainder
          
 	 if purchase == 0:
 	    intermedport.append(rebalance.rebalance(buyamounts[purchase],starterport,buycode[purchase]))
@@ -159,7 +160,10 @@ if __name__ == '__main__':
 	    print "buy the following combos"
 	    portresult = [starterport]
 	    for buyamount,buycode in zip(buychoices[rating][::2],buychoices[rating][1::2]):
-	       print "%4s qty: %12.2f $amount: %12.2f" % (buycode,buyamount/portresult[-1][buycode][3],buyamount)
+               if portresult[-1][buycode][3] > 0.0:
+	          print "%4s qty: %12.2f $amount: %12.2f" % (buycode,buyamount/portresult[-1][buycode][3],buyamount)
+               else:
+                  print "%4s qty: %12s $amount: %12.2f" % (buycode,"share price unknown",buyamount)
 	       portresult.append(rebalance.rebalance(buyamount,portresult[-1],buycode))
             print 
 	    rebalance.printport(portresult[-1])
