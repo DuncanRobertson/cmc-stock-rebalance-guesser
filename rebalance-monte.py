@@ -4,6 +4,10 @@ import csv, sys, pprint, random, rebalance, copy
 
 import multiprocessing
 
+# set this to true if we just want to run sequentially, helpful for debug or performance tests.
+# singlethread = True
+singlethread = False
+
 def usage():
    print "%s <config.ini> <profitloss.csv> cashtospenddollars iterationcount  .." % sys.argv[0]
    sys.exit(1)
@@ -21,10 +25,10 @@ if __name__ == '__main__':
 
    buychoices = {}
 
-   print "starter portfolio"
+   print "starter portfolio, loaded from the file ",cmcpnlcsvfilename
    rebalance.printport(starterport)
    starterrating = rebalance.isrebalancegood(starterport)
-   print "starter rating", starterrating
+   print "starter balance rating (i.e. how close to the desired balance):", starterrating
    print
 
    # first gather all the single buy choices.
@@ -115,39 +119,53 @@ if __name__ == '__main__':
       workertries = numtries/numpurchases
       # print "starting ",numpurchases,"workers with a total of ",numtries,"tries"
       for i in xrange(numpurchases):
-         # print "   starting worker with numtries",workertries,"numpurchases",numpurchases
-         a_proc = multiprocessing.Process(target=calcpurchases,args=(statusbar,workertries,numpurchases,result_queue))
-         statusbar = False
-         proc_list.append(a_proc)
-         a_proc.start()
+         if singlethread:
+            print "   starting worker with numtries",workertries,"numpurchases",numpurchases
+            calcpurchases(statusbar,workertries,numpurchases,result_queue)
+         else:
+            # print "   starting worker with numtries",workertries,"numpurchases",numpurchases
+            a_proc = multiprocessing.Process(target=calcpurchases,args=(statusbar,workertries,numpurchases,result_queue))
+            statusbar = False
+            proc_list.append(a_proc)
+            a_proc.start()
 
    # wait for workers to finish and gather the results.
-   for p in proc_list:
-      tempbuychoices = result_queue.get()
-      buychoices.update(tempbuychoices)
-      p.join()
+   if singlethread:
+      while not result_queue.empty():
+         tempbuychoices = result_queue.get()
+         buychoices.update(tempbuychoices)
+   else:
+      for p in proc_list:
+         tempbuychoices = result_queue.get()
+         buychoices.update(tempbuychoices)
+         p.join()
 
    # now rate the results and just show the best of each buy count.
+   # if a larger number of trades rates worse, we dont show it.
       
    sortratings = buychoices.keys()
    sortratings.sort()
    maxlen = len(asxcodestochoose) * 2 + 1
    prevlen = maxlen
+   print
+   print
    for rating in sortratings:
       if maxlen >= len(buychoices[rating]):
 	 maxlen = len(buychoices[rating])
 	 if maxlen != prevlen:
+            print "the best rating discovered for ",maxlen/2," share trades"
 	    # have found the best rated of the next number of fees.
 	    prevlen = maxlen
-	    print
 	    print "buy the following combos"
 	    portresult = [starterport]
 	    for buyamount,buycode in zip(buychoices[rating][::2],buychoices[rating][1::2]):
-	       print "%4s qty: %12.2f $amount: %12.2f" % (buycode,buyamount,buyamount/portresult[-1][buycode][3])
+	       print "%4s qty: %12.2f $amount: %12.2f" % (buycode,buyamount/portresult[-1][buycode][3],buyamount)
 	       portresult.append(rebalance.rebalance(buyamount,portresult[-1],buycode))
             print 
 	    rebalance.printport(portresult[-1])
 	    print "rating: ",rebalance.isrebalancegood(portresult[-1])
 	    print "broker fees: % ", len(buychoices[rating])/2 * fee / addedcash * 100
+            print
+            print
             
 
