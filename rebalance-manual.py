@@ -7,7 +7,7 @@ def usage():
    sys.exit(1)
 
 try:
-   fee, desiredport = rebalance.readconfig(sys.argv[1])
+   fee, desiredport, singleproc = rebalance.readconfig(sys.argv[1])
    cmcpnlcsvfilename = sys.argv[2]
    buysequence = zip(sys.argv[3:][::2],sys.argv[3:][1::2])
 except:

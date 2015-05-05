@@ -4,9 +4,6 @@ import csv, sys, pprint, random, rebalance, copy
 
 import multiprocessing
 
-# set this to true if we just want to run sequentially, helpful for debug or performance tests.
-# singlethread = True
-singlethread = False
 
 def usage():
    print "%s <config.ini> <profitloss.csv> cashtospenddollars iterationcount  .." % sys.argv[0]
@@ -14,7 +11,7 @@ def usage():
 
 if __name__ == '__main__':
    try:
-      fee, desiredport = rebalance.readconfig(sys.argv[1])
+      fee, desiredport, singleproc = rebalance.readconfig(sys.argv[1])
       cmcpnlcsvfilename = sys.argv[2]
       addedcash = float(sys.argv[3])
       numtries = int(sys.argv[4])
@@ -120,7 +117,7 @@ if __name__ == '__main__':
       workertries = numtries/numpurchases
       # print "starting ",numpurchases,"workers with a total of ",numtries,"tries"
       for i in xrange(numpurchases):
-         if singlethread:
+         if singleproc:
             print "   starting worker with numtries",workertries,"numpurchases",numpurchases
             calcpurchases(statusbar,workertries,numpurchases,result_queue)
          else:
@@ -131,7 +128,7 @@ if __name__ == '__main__':
             a_proc.start()
 
    # wait for workers to finish and gather the results.
-   if singlethread:
+   if singleproc:
       while not result_queue.empty():
          tempbuychoices = result_queue.get()
          buychoices.update(tempbuychoices)

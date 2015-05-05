@@ -140,6 +140,13 @@ def readconfig(configfile):
    else:
       fee = 0.0
 
+   if settings.has_option('settings','singleproc'):
+      singleproc = settings.getboolean('settings','singleproc')
+   else:
+      singleproc = False
+   if singleproc:
+      print "config option: Running in single processor mode"
+
    if 'desiredbalance' not in sections:
       print "config file needs [desiredbalance] section"
       sys.exit(1)
@@ -153,5 +160,5 @@ def readconfig(configfile):
    desiredport[TOTALS] = total
    if not total == 100.0:
       print "WARNING: total percentage of desired mix read from config does not add up to 100%"
-   return fee,desiredport
+   return fee,desiredport,singleproc
 

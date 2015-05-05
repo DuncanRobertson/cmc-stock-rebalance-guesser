@@ -8,7 +8,7 @@ def usage():
    sys.exit(1)
 
 for cmcpnlcsvfilename in  sys.argv[2:]:
-   fee, desiredport = rebalance.readconfig(sys.argv[1])
+   fee, desiredport, singleproc = rebalance.readconfig(sys.argv[1])
    starterport = rebalance.read_cmc_pnl_to_portfdict(cmcpnlcsvfilename,desiredport)
 
    print "portfolio, loaded from the file ",cmcpnlcsvfilename
