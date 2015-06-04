@@ -52,14 +52,12 @@ if __name__ == '__main__':
 
    maxlen = 0
 
-def calcpurchases(statusbar,numtries,numpurchases,return_queue):
+def calcpurchases(numtries,numpurchases):
    buychoices = {}
 
    # print ".. trying options for ",numpurchases," number of purchases...tries",numtries
    # now running multiprocessor, only put out a status bar for the first job.
    for i in xrange(numtries):
-      if (not i % 700) and statusbar:
-      	 rebalance.update_progress(float(i)/float(numtries))
       buyamounts = rebalance.constrained_sum_sample_pos(numpurchases,int(addedcash - (fee * numpurchases)))
       buycode = []
       intermedport = []
@@ -103,40 +101,32 @@ def calcpurchases(statusbar,numtries,numpurchases,return_queue):
    sortratings.sort()
    # print "ending worker with numtries",numtries,"numpurchases",numpurchases
 
-   return_queue.put({ sortratings[0] : buychoices[sortratings[0]] })
+   return({ sortratings[0] : buychoices[sortratings[0]] })
 
 #cribbed a bit from http://natpoor.blogspot.com/2014/07/python-multiprocessing-and-queues.html
+# then improved with using a pool so the processes are balanced better.
 if __name__ == '__main__':
-   result_queue = multiprocessing.Queue()
-   proc_list = list()
+   poolresults = []
 
-   # fire off the threads, this could be better as the larger buy combos run longer, so
-   # TODO is to break these down.
-   statusbar = True
+   print "CPU count is ", multiprocessing.cpu_count()
+   pool =  multiprocessing.Pool(processes=multiprocessing.cpu_count())
    for numpurchases in xrange(2,len(asxcodestochoose) + 1):
-      workertries = numtries/numpurchases
-      # print "starting ",numpurchases,"workers with a total of ",numtries,"tries"
-      for i in xrange(numpurchases):
+      workertries = numtries/numpurchases/2
+      for i in xrange(numpurchases * 2):
          if singleproc:
-            print "   starting worker with numtries",workertries,"numpurchases",numpurchases
-            calcpurchases(statusbar,workertries,numpurchases,result_queue)
+            print "iteration:",numpurchases - 2," of ",len(asxcodestochoose) - 2,i + 1," of ",numpurchases * 2," tries:",workertries
+            buychoices.update(calcpurchases(workertries,numpurchases))
          else:
-            # print "   starting worker with numtries",workertries,"numpurchases",numpurchases
-            a_proc = multiprocessing.Process(target=calcpurchases,args=(statusbar,workertries,numpurchases,result_queue))
-            statusbar = False
-            proc_list.append(a_proc)
-            a_proc.start()
+            poolresults.append(pool.apply_async(calcpurchases,args=(workertries,numpurchases)))
 
-   # wait for workers to finish and gather the results.
-   if singleproc:
-      while not result_queue.empty():
-         tempbuychoices = result_queue.get()
-         buychoices.update(tempbuychoices)
-   else:
-      for p in proc_list:
-         tempbuychoices = result_queue.get()
-         buychoices.update(tempbuychoices)
-         p.join()
+   # if not in single processor mode gather the results as the pool of workers finish.
+   if not singleproc:
+      i = 0.0
+      for p in poolresults:
+         i = i + 1
+         buychoices.update(p.get())
+         # print "have result ",i," of ",len(poolresults)
+         rebalance.update_progress(i/len(poolresults))
 
    # now rate the results and just show the best of each buy count.
    # if a larger number of trades rates worse, we dont show it.
