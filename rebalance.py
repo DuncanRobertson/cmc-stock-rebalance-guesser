@@ -8,6 +8,27 @@ import csv, sys, pprint, random, ConfigParser
 
 TOTALS = 'TOTALS'
 
+# TOTALS (100.0, 98862.92, 100.0, 0.0) ((100.0, 98862.92, 100.0, 0.0), 98862.92, 100.0, 0.0)
+# BEN (10.0, 17873.46, 18.079033069223527, 10.62) ((10.0, 17873.46, 18.079033069223527, 10.62), 17873.46, 18.079033069223527, 10.62)
+
+
+# return a portfdict that is the sum of 2 input ones..
+# presumes both are coherent and have the same asxcodes, and grabs values that should be common from the first one (share price, desired %)
+def add_portfdict(porta, portb):
+   portsum = {}
+   for asxcode in porta.keys():
+      # print asxcode,porta[asxcode],portb[asxcode]
+      portsum[asxcode] = porta[asxcode][0],porta[asxcode][1]+portb[asxcode][1],0,porta[asxcode][3]
+   # recalc percentages..
+   # print "total is:", 
+   # print portsum[TOTALS]
+   for asxcode in portsum.keys():
+      # print asxcode,portsum[asxcode][1]/portsum[TOTALS][1] * 100
+      portsum[asxcode] = portsum[asxcode][0],portsum[asxcode][1],portsum[asxcode][1]/portsum[TOTALS][1] * 100,portsum[asxcode][3]
+
+   return portsum
+
+
 def read_cmc_pnl_to_portfdict(filename,desiredport):
    currentport = {}
 
