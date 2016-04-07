@@ -14,9 +14,10 @@ Then does a number of iterations broken into two random buys.
 Then does a number of iterations broken into three random buys.
 This continues broken into multiple purchases up to the amount of stocks in the target portfolio.
 
-Uses the Python multiprocessor module to run faster on multicore machines, though this is implemented somewhat crudely it does result in a substantial performance gain.
+Uses the Python multiprocessor module to run faster on multicore machines, though this is implemented crudely it does result in a substantial performance gain.
 
-Takes as input the CSV file saved from the CMC Markets "Profit and Loss" statement, as a source of the current state of the portfolio.
+Takes as input the CSV file saved from the CMC Markets "Profit and Loss" statement, as a source of the current state of the portfolio. Multiple portfolio csv files can be put on the command line and the portfolios are added together.
+Non CMC market portfolios can be included by creating a CSV file in the same format if needed.
 
 
 example usage:
@@ -34,6 +35,8 @@ python rebalance-manual.py  rebalance.ini PnL-example.CSV  HHV 10000 AAA 20000
 will show the percentage weightings of the starter portfolio, then the weightings after 10000 of HHV and 20000 of AAA are added, also showing the "rating" (how close we measure the portfolio to the ideal weighting) and the fees.
 
 Note that the "rating" (the measurement this script uses to determine how close a portfolio is to the desired balance) of a portfolio can vary substantially form day to day just with the normal "random walk" of share prices so it is a waste of fees to try and match too closely, near enough is good enough.
+
+At the moment the trade fee is a fixed price when in reality CMC uses a formula, so this is slightly incorrect.
 
 environment:
 
