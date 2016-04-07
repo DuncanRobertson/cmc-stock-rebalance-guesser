@@ -4,25 +4,39 @@ import csv, sys, pprint, random, rebalance, copy
 
 import multiprocessing
 
-
 def usage():
-   print "%s <config.ini> <profitloss.csv> cashtospenddollars iterationcount  .." % sys.argv[0]
+   print "%s <config.ini> <profitloss.csv> [profitloss2.csv ...]  cashtospenddollars iterationcount  .." % sys.argv[0]
+   print "can accept one or more profitloss.csv files on command line"
    sys.exit(1)
+
+inputcsvfiles = []
 
 if __name__ == '__main__':
    try:
       fee, desiredport, singleproc = rebalance.readconfig(sys.argv[1])
-      cmcpnlcsvfilename = sys.argv[2]
-      addedcash = float(sys.argv[3])
-      numtries = int(sys.argv[4])
+      argcount = 2
+      while sys.argv[argcount].lower()[-4:] == '.csv':
+         inputcsvfiles.append(sys.argv[argcount])
+         argcount = argcount + 1
+      # print "argcount when leaving loop was ",argcount
+      addedcash = float(sys.argv[argcount])
+      numtries = int(sys.argv[argcount + 1])
    except:
       usage()
+   starterports = []
+   firstcsv = True
+   for csvfile in inputcsvfiles:
+      starterports.append(rebalance.read_cmc_pnl_to_portfdict(csvfile,desiredport))
+      if not firstcsv:
+         starterports.append(rebalance.add_portfdict(starterports[-2],starterports[-1]))
+      else:
+         firstcsv = False
 
-   starterport = rebalance.read_cmc_pnl_to_portfdict(cmcpnlcsvfilename,desiredport)
+   starterport = starterports[-1]
 
    buychoices = {}
 
-   print "starter portfolio, loaded from the file ",cmcpnlcsvfilename
+   print "starter portfolio, loaded from the files ",inputcsvfiles
    rebalance.printport(starterport)
    starterrating = rebalance.isrebalancegood(starterport)
    print "starter balance rating (i.e. how close to the desired balance):", starterrating
@@ -49,7 +63,6 @@ if __name__ == '__main__':
 
    asxcodestochoosesorted.sort(reverse=True)
 
-
    maxlen = 0
 
 def calcpurchases(numtries,numpurchases):
@@ -69,8 +82,6 @@ def calcpurchases(numtries,numpurchases):
           asxcodestobuy.remove(random.choice(asxcodestobuy))
 
       # print "for numpurchases",numpurchases,"have  asxcodestobuy", asxcodestobuy
-          
-      codestobuy = asxcodestochoosesorted
       for purchase in xrange(numpurchases):
          # since the intervals chosen are random anyway, we dont need to randomly choose an ASX code?
          # so we can do it in order of largest to smallest shareprice
@@ -159,4 +170,3 @@ if __name__ == '__main__':
             print
             print
             
-

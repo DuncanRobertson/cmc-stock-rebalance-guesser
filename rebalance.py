@@ -17,13 +17,11 @@ TOTALS = 'TOTALS'
 def add_portfdict(porta, portb):
    portsum = {}
    for asxcode in porta.keys():
-      # print asxcode,porta[asxcode],portb[asxcode]
-      portsum[asxcode] = porta[asxcode][0],porta[asxcode][1]+portb[asxcode][1],0,porta[asxcode][3]
-   # recalc percentages..
-   # print "total is:", 
-   # print portsum[TOTALS]
+      if porta[asxcode][3] == 0:
+         portsum[asxcode] = porta[asxcode][0],porta[asxcode][1]+portb[asxcode][1],0,portb[asxcode][3]
+      else:
+         portsum[asxcode] = porta[asxcode][0],porta[asxcode][1]+portb[asxcode][1],0,porta[asxcode][3]
    for asxcode in portsum.keys():
-      # print asxcode,portsum[asxcode][1]/portsum[TOTALS][1] * 100
       portsum[asxcode] = portsum[asxcode][0],portsum[asxcode][1],portsum[asxcode][1]/portsum[TOTALS][1] * 100,portsum[asxcode][3]
 
    return portsum
@@ -180,6 +178,6 @@ def readconfig(configfile):
       
    desiredport[TOTALS] = total
    if not total == 100.0:
-      print "WARNING: total percentage of desired mix read from config does not add up to 100%"
+      print "WARNING: total percentage ",total," of desired mix read from config does not add up to 100%" 
    return fee,desiredport,singleproc
 
